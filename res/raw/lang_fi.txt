@@ -1,0 +1,220 @@
+# a language for the flask game
+
+module Suomi
+code fi
+
+# Clepsydra
+app_name	Klepsydra
+
+# Turn the flask with your finger. Catch the water in the neck, find the way down, and let it out of the bottom in one long pour. Water that sneaks in through the bottom turns grey and does not count.
+intro	Käännä pulloa sormella. Ota vesi kiinni pullon kaulaan, etsi tie alas ja päästä se ulos pohjasta yhtenä pitkänä virtana. Pohjan kautta sisään hiipivä vesi muuttuu harmaaksi, eikä sitä lasketa.
+
+# Start
+start	Aloita
+
+# New flask
+again	Uusi pullo
+
+# best pour, this flask
+best_flask	tämän pullon paras virta
+
+# record
+record	ennätys
+
+# new record
+new_record	uusi ennätys
+
+# Best pour: {n}
+over_title	Paras virta: {n}
+
+# {n} of {m} drops left through the bottom. Turn the flask to pour out what is left, or take a new one.
+over_text	Pohjasta valui ulos {n}/{m} pisaraa. Käännä pulloa ja kaada loput, tai ota uusi pullo.
+
+# Nothing got through
+over_none	Mitään ei päässyt läpi
+
+# Keep the neck up while the water falls, then find a way down to the bottom opening.
+over_none_text	Pidä kaula ylhäällä, kun vettä sataa, ja etsi sitten tie alas pohjan aukolle.
+
+# turns left
+turns_left	kierroksia jäljellä
+
+# time left
+time_left	aikaa jäljellä
+
+# the flask has set
+set	pullo on jähmettynyt
+
+# This flask turns {n} times, no more.
+note_turns	Tätä pulloa voi kääntää enintään {n} kierrosta.
+
+# This flask turns for {n} seconds, then sets.
+note_time	Tätä pulloa voi kääntää {n} sekuntia, sitten se jähmettyy.
+
+# A bubble of air blocks a corridor. Tap it to pop it, once per flask.
+note_bubble	Ilmakupla tukkii käytävän. Puhkaise se napauttamalla – kerran pulloa kohden.
+
+# Two bubbles and only one pop. Choose well.
+note_bubble_two	Kaksi kuplaa ja vain yksi puhkaisu. Valitse viisaasti.
+
+# Seeds like pearls cling to the glass. Wet them, and a flower opens across the way.
+note_seeds	Lasiin on tarttunut helmen kaltaisia siemeniä. Kastele ne, niin kukka avautuu tien poikki.
+
+# This flask breathes. Once the rain is over, its maze changes now and then.
+note_breath	Tämä pullo hengittää. Kun sade on ohi, sen labyrintti muuttuu silloin tällöin.
+
+# A float rides in the maze. Water lifts it to shut the gap above; when the water drains away, it sinks and shuts the gap below.
+note_float	Labyrintissa on koho. Vesi nostaa sen sulkemaan yläpuolisen raon; kun vesi valuu pois, se laskeutuu ja sulkee alapuolisen raon.
+
+# This flask turns by itself. Hold it: it pulls like rubber, and it can slip out of your fingers.
+note_wild	Tämä pullo pyörii itsestään. Pidä siitä kiinni: se vetää kuin kumi ja voi lipsahtaa sormista.
+
+# Now and then this flask flips over like a coin, and left becomes right.
+note_coin	Silloin tällöin tämä pullo kääntyy kuin kolikko, ja vasen muuttuu oikeaksi.
+
+# Snow is coming. Snow that meets water in the glass turns it to ice.
+note_snow	Lunta on tulossa. Lasissa veteen osuva lumi jäädyttää sen.
+
+# Lava is coming. Lava that meets water boils it away into steam.
+note_lava	Laavaa on tulossa. Veteen osuva laava keittää sen höyryksi.
+
+# Slime is coming. It makes the water thick and slow.
+note_slime	Levää on tulossa. Se tekee vedestä sakeaa ja hidasta.
+
+# Here is one way through, twice as fast. Tap to skip it.
+demo_note	Tässä yksi tie läpi, kaksinkertaisella nopeudella. Ohita napauttamalla.
+
+# music
+music	musiikki
+
+# silence
+silence	hiljaisuus
+
+# sea
+sea	meri
+
+# amber
+amber	meripihka
+
+# moss
+moss	sammal
+
+# English
+english	English
+
+# Load a language
+load_language	Lataa kieli
+
+# This is not a language for this game
+not_a_language	Tämä ei ole kieli tälle pelille
+
+# Save this language as a file
+save_language	Tallenna tämä kieli tiedostoksi
+
+# Saved. Fill it in and load it back
+language_saved	Tallennettu. Täydennä ja lataa takaisin
+
+# It could not be saved
+not_saved	Tallennus ei onnistunut
+
+# How it plays
+help_title	Näin pelataan
+
+# Water falls from above in ten volumes. Keep the neck of the flask up and catch it.
+help_play_1	Vettä sataa ylhäältä kymmenenä eränä. Pidä pullon kaula ylhäällä ja ota vesi kiinni.
+
+# Turn the flask with one finger, the way a hand turns a dial. Water lies wherever its corridor is lowest, and slips through a gap when the gap comes underneath.
+help_play_2	Käännä pulloa yhdellä sormella kuin valitsinta. Vesi asettuu käytävänsä alimpaan kohtaan ja livahtaa raosta, kun rako tulee sen alle.
+
+# Lead it down to the bottom opening and let it go. What counts is one pour: every drop that leaves with no pause longer than a blink.
+help_play_3	Johda se alas pohjan aukolle ja päästä irti. Ratkaisevaa on yksi virta: kaikki pisarat, jotka valuvat ulos ilman silmänräpäystä pidempää taukoa.
+
+# Water that sneaks in through the bottom turns grey and never counts.
+help_grey	Pohjan kautta sisään hiipivä vesi muuttuu harmaaksi, eikä sitä koskaan lasketa.
+
+# Never the same flask twice
+help_maze_title	Joka kerta uusi pullo
+
+# Every flask is a new maze, from gentle to knotty; the beads at the top tell how knotty. The flasks come shuffled, not climbing, and two hard ones never stand side by side. Some mazes scatter their gaps, some wind them in a spiral, some wall off chambers that hold water like cups.
+help_maze	Jokainen pullo on uusi labyrintti, helposta mutkikkaaseen; ylhäällä olevat helmet kertovat, kuinka mutkikas. Pullot tulevat sekaisin eivätkä nousevassa järjestyksessä, eikä kahta vaikeaa tule peräkkäin. Joissakin labyrinteissa raot ovat hajallaan, joissakin kierteenä, joissakin on kammioita, jotka pitävät vettä kuin kupit.
+
+# What can happen
+help_troubles_title	Mitä voi tapahtua
+
+# Some flasks keep a trouble or two, never more. Each is said under the flask as it is handed over.
+help_troubles	Joissakin pulloissa on yksi tai kaksi kiusaa, ei koskaan enempää. Jokaisesta kerrotaan pullon alla, kun pullo annetaan.
+
+# A count of turns
+t_turns_title	Kierrosten määrä
+
+# The flask turns only so far, then sets fast. The count is the least the maze needs, and a good deal more.
+t_turns	Pulloa voi kääntää vain tietyn verran, sitten se jähmettyy. Määrä on labyrintin vähimmäistarve ja reilusti päälle.
+
+# A clock
+t_time_title	Kello
+
+# The flask turns only for so long, then sets fast.
+t_time	Pulloa voi kääntää vain tietyn ajan, sitten se jähmettyy.
+
+# Bubbles
+t_bubble_title	Kuplat
+
+# A bubble of air across a corridor. A tap pops it, once a flask; with two, only the right one opens a way.
+t_bubble	Ilmakupla käytävän poikki. Napautus puhkaisee sen, kerran pulloa kohden; kahdesta vain oikea avaa tien.
+
+# Seeds
+t_seed_title	Siemenet
+
+# Pearls stuck to the glass. Wetted enough, one opens into a flower across the corridor: red into a rose, green into clover, gold into a daisy.
+t_seed	Lasiin tarttuneita helmiä. Kun helmi kastuu tarpeeksi, se avautuu kukaksi käytävän poikki: punainen ruusuksi, vihreä apilaksi, kultainen päivänkakkaraksi.
+
+# A float
+t_float_title	Koho
+
+# A bob on a rail between two gaps. Water lifts it to shut the gap above; without water it sinks and shuts the gap below.
+t_float	Koho kiskolla kahden raon välissä. Vesi nostaa sen sulkemaan ylemmän raon; ilman vettä se laskeutuu ja sulkee alemman.
+
+# A wild flask
+t_wild_title	Villi pullo
+
+# It turns by itself. A finger holds it like a rubber band, and it slips loose when pulled too hard.
+t_wild	Se pyörii itsestään. Sormi pitää sitä kuin kuminauhaa, ja liian kovasta vedosta se lipsahtaa irti.
+
+# A coin flip
+t_coin_title	Kolikonheitto
+
+# Now and then the flask flips over like a coin, water and all, and left becomes right.
+t_coin	Silloin tällöin pullo kääntyy kuin kolikko vesineen päivineen, ja vasen muuttuu oikeaksi.
+
+# Snow
+t_snow_title	Lumi
+
+# Snow that meets water freezes it. The ice turns with the glass until it melts.
+t_snow	Veteen osuva lumi jäädyttää sen. Jää kääntyy lasin mukana, kunnes sulaa.
+
+# Lava
+t_lava_title	Laava
+
+# Lava boils the water it meets into steam, which rises out of the neck.
+t_lava	Laava keittää veden höyryksi, joka nousee ulos kaulasta.
+
+# Slime
+t_slime_title	Levä
+
+# On flasks with a clock, slime makes the water thick and slow.
+t_slime	Kellopulloissa levä tekee vedestä sakeaa ja hidasta.
+
+# A breathing flask
+t_breath_title	Hengittävä pullo
+
+# Once its rain is over, a plain flask may breathe, and the maze inside becomes another.
+t_breath	Kun sade on ohi, tavallinen pullo voi hengittää, ja sen labyrintti muuttuu toiseksi.
+
+# The keys
+help_keys_title	Painikkeet
+
+# Along the top: sound, tone and language on the left; this page and a new flask, at any time, on the right.
+help_keys	Ylhäällä vasemmalla ääni, sävy ja kieli; oikealla tämä sivu ja uusi pullo milloin tahansa.
+
+# No network, no permissions, no advertising. The record stays on the phone.
+help_quiet	Ei verkkoa, ei lupia, ei mainoksia. Ennätys pysyy puhelimessa.

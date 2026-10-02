@@ -1,0 +1,222 @@
+# a language for the flask game
+# fill the empty lines and load the file back
+
+module untitled
+code xx
+
+# Clepsydra
+app_name	
+
+# Turn the flask with your finger. Catch the water in the neck, find the way down, and let it out of the bottom in one long pour. Water that sneaks in through the bottom turns grey and does not count.
+intro	
+
+# Start
+start	
+
+# New flask
+again	
+
+# best pour, this flask
+best_flask	
+
+# record
+record	
+
+# new record
+new_record	
+
+# Best pour: {n}
+over_title	
+
+# {n} of {m} drops left through the bottom. Turn the flask to pour out what is left, or take a new one.
+over_text	
+
+# Nothing got through
+over_none	
+
+# Keep the neck up while the water falls, then find a way down to the bottom opening.
+over_none_text	
+
+# turns left
+turns_left	
+
+# time left
+time_left	
+
+# the flask has set
+set	
+
+# This flask turns {n} times, no more.
+note_turns	
+
+# This flask turns for {n} seconds, then sets.
+note_time	
+
+# A bubble of air blocks a corridor. Tap it to pop it, once per flask.
+note_bubble	
+
+# Two bubbles and only one pop. Choose well.
+note_bubble_two	
+
+# Seeds like pearls cling to the glass. Wet them, and a flower opens across the way.
+note_seeds	
+
+# This flask breathes. Once the rain is over, its maze changes now and then.
+note_breath	
+
+# A float rides in the maze. Water lifts it to shut the gap above; when the water drains away, it sinks and shuts the gap below.
+note_float	
+
+# This flask turns by itself. Hold it: it pulls like rubber, and it can slip out of your fingers.
+note_wild	
+
+# Now and then this flask flips over like a coin, and left becomes right.
+note_coin	
+
+# Snow is coming. Snow that meets water in the glass turns it to ice.
+note_snow	
+
+# Lava is coming. Lava that meets water boils it away into steam.
+note_lava	
+
+# Slime is coming. It makes the water thick and slow.
+note_slime	
+
+# Here is one way through, twice as fast. Tap to skip it.
+demo_note	
+
+# music
+music	
+
+# silence
+silence	
+
+# sea
+sea	
+
+# amber
+amber	
+
+# moss
+moss	
+
+# English
+english	
+
+# Load a language
+load_language	
+
+# This is not a language for this game
+not_a_language	
+
+# Save this language as a file
+save_language	
+
+# Saved. Fill it in and load it back
+language_saved	
+
+# It could not be saved
+not_saved	
+
+# How it plays
+help_title	
+
+# Water falls from above in ten volumes. Keep the neck of the flask up and catch it.
+help_play_1	
+
+# Turn the flask with one finger, the way a hand turns a dial. Water lies wherever its corridor is lowest, and slips through a gap when the gap comes underneath.
+help_play_2	
+
+# Lead it down to the bottom opening and let it go. What counts is one pour: every drop that leaves with no pause longer than a blink.
+help_play_3	
+
+# Water that sneaks in through the bottom turns grey and never counts.
+help_grey	
+
+# Never the same flask twice
+help_maze_title	
+
+# Every flask is a new maze, from gentle to knotty; the beads at the top tell how knotty. The flasks come shuffled, not climbing, and two hard ones never stand side by side. Some mazes scatter their gaps, some wind them in a spiral, some wall off chambers that hold water like cups.
+help_maze	
+
+# What can happen
+help_troubles_title	
+
+# Some flasks keep a trouble or two, never more. Each is said under the flask as it is handed over.
+help_troubles	
+
+# A count of turns
+t_turns_title	
+
+# The flask turns only so far, then sets fast. The count is the least the maze needs, and a good deal more.
+t_turns	
+
+# A clock
+t_time_title	
+
+# The flask turns only for so long, then sets fast.
+t_time	
+
+# Bubbles
+t_bubble_title	
+
+# A bubble of air across a corridor. A tap pops it, once a flask; with two, only the right one opens a way.
+t_bubble	
+
+# Seeds
+t_seed_title	
+
+# Pearls stuck to the glass. Wetted enough, one opens into a flower across the corridor: red into a rose, green into clover, gold into a daisy.
+t_seed	
+
+# A float
+t_float_title	
+
+# A bob on a rail between two gaps. Water lifts it to shut the gap above; without water it sinks and shuts the gap below.
+t_float	
+
+# A wild flask
+t_wild_title	
+
+# It turns by itself. A finger holds it like a rubber band, and it slips loose when pulled too hard.
+t_wild	
+
+# A coin flip
+t_coin_title	
+
+# Now and then the flask flips over like a coin, water and all, and left becomes right.
+t_coin	
+
+# Snow
+t_snow_title	
+
+# Snow that meets water freezes it. The ice turns with the glass until it melts.
+t_snow	
+
+# Lava
+t_lava_title	
+
+# Lava boils the water it meets into steam, which rises out of the neck.
+t_lava	
+
+# Slime
+t_slime_title	
+
+# On flasks with a clock, slime makes the water thick and slow.
+t_slime	
+
+# A breathing flask
+t_breath_title	
+
+# Once its rain is over, a plain flask may breathe, and the maze inside becomes another.
+t_breath	
+
+# The keys
+help_keys_title	
+
+# Along the top: sound, tone and language on the left; this page and a new flask, at any time, on the right.
+help_keys	
+
+# No network, no permissions, no advertising. The record stays on the phone.
+help_quiet	
+
