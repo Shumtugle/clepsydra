@@ -50,34 +50,38 @@ final class Board extends View {
 
     /** Touch targets on the card. */
     private static final int NONE = -1, ACTION = 0, SOUND = 1, TONE = 2, LANGUAGE = 3, SKIP = 4,
-            ENGLISH = 5, LOAD = 6, FINNISH = 7, RUSSIAN = 8, SAVE = 9, HELP = 10;
+            ENGLISH = 5, LOAD = 6, FINNISH = 7, RUSSIAN = 8, SAVE = 9, HELP = 10, SECOND = 11, WAY = 12;
     /** How long one breath of the flask takes. */
     private static final float BREATH = 1.2f;
 
     /**
-     * Three tones, each by day and by night: ground top and bottom, ink, quiet
-     * ink, glass, glass light, glass tint, water, foreign water, card.
+     * Three tones, each by day and by night. A tone is the stuff the maze is
+     * made of and the room it stands in: ground top and bottom, ink, quiet
+     * ink, the maze, its light, the tint inside the flask, the keys and
+     * buttons, the card. Water, flowers and bubbles are the same in every tone.
      */
     private static final int[][][] TONES = {
-            { // sea
+            { // glass
                     {0xFFE6EDF0, 0xFFCFDBE1, 0xFF1B3040, 0xFF5A6F7E, 0x6B203E54, 0xF2FFFFFF,
-                            0x61FFFFFF, 0xFF1D74B8, 0xBF606C76, 0xEBECF2F5},
+                            0x61FFFFFF, 0xFF3D7895, 0xEBECF2F5},
                     {0xFF22303D, 0xFF121A23, 0xFFE3EDF3, 0xFF8EA3B2, 0x66C4E4F8, 0x8CFFFFFF,
-                            0x0FAAD2EB, 0xFF4CB3E4, 0x8C96A0AA, 0xEB16202A},
+                            0x0FAAD2EB, 0xFF86BCD6, 0xEB16202A},
             },
-            { // amber
-                    {0xFFF2E9DB, 0xFFE2D1B9, 0xFF3A2A1A, 0xFF7A6450, 0x6B5A3C1E, 0xF2FFFFFF,
-                            0x61FFFFFF, 0xFFC0721A, 0xBF7A7068, 0xEBF7F0E5},
-                    {0xFF2E241B, 0xFF17110C, 0xFFF2E6D6, 0xFFB09A82, 0x66F0D7B4, 0x8CFFFFFF,
-                            0x0FF0D2AA, 0xFFE9A13B, 0x8CA0968C, 0xEB251D16},
+            { // brass
+                    {0xFFF2E9DB, 0xFFE2D1B9, 0xFF3A2A1A, 0xFF7A6450, 0xFFA87E30, 0xFFF7E3A8,
+                            0x26E8C98A, 0xFFA2681C, 0xEBF7F0E5},
+                    {0xFF2E241B, 0xFF17110C, 0xFFF2E6D6, 0xFFB09A82, 0xFFB38B3C, 0xC8FFE7A8,
+                            0x14F0C878, 0xFFE0A548, 0xEB251D16},
             },
-            { // moss
-                    {0xFFE4ECE4, 0xFFCCD9CD, 0xFF1C3326, 0xFF5A7363, 0x6B1E4630, 0xF2FFFFFF,
-                            0x61FFFFFF, 0xFF2A8765, 0xBF66706A, 0xEBEBF2EC},
-                    {0xFF1E2B24, 0xFF101813, 0xFFE1EEE6, 0xFF8FA89A, 0x66BEE8D0, 0x8CFFFFFF,
-                            0x0FAAE6C8, 0xFF4FC59A, 0x8C96A09A, 0xEB16211B},
+            { // stone
+                    {0xFFE7E5E0, 0xFFD2CFC7, 0xFF2A2925, 0xFF6E6A62, 0xFF8A857A, 0xFFEDEAE2,
+                            0x1E8A857A, 0xFF5E7A5A, 0xEBEFEDE8},
+                    {0xFF27282B, 0xFF141517, 0xFFE8E6E1, 0xFF9C9890, 0xFF8E8A82, 0xA0E4E1D9,
+                            0x0FD0CCC4, 0xFF9CB894, 0xEB1C1D20},
             },
     };
+    /** Water by day and by night, and water that came in through the bottom: the same in every tone. */
+    private static final int[] WATER = {0xFF1D74B8, 0xFF4CB3E4}, MURK = {0xBF606C76, 0x8C96A0AA};
 
     private final Water water = new Water();
     private final Random random = new Random();
@@ -91,7 +95,7 @@ final class Board extends View {
     private final float dp;
 
     private int mode = MENU, record, spawned, lastTen, tone;
-    private float lastSpawn = -99f, lastTurn = -99f, pendingRot, lastTouch;
+    private float lastSpawn = -99f, lastTurn = -99f, lastStroke = -99f, pendingRot, lastTouch;
     private boolean dragging, running;
     private int pressed = NONE;
     private long lastFrame;
@@ -100,7 +104,10 @@ final class Board extends View {
     /** What the rule leaves: turning in radians, or the moment the flask sets. */
     private float turnBudget, turnLeft, setAt;
     private boolean set;
-    private int pops;
+    /** The flask's one decision about its bubbles: made or not, and a stroke making it now. */
+    private boolean decided, stroking;
+    /** The water in the flask was poured by the hand that shows the way, not by the player. */
+    private boolean byHand;
     private float downX, downY;
     private boolean moved;
     private StaticLayout noteLayout;
@@ -115,7 +122,7 @@ final class Board extends View {
     private Hand hand;
     private float breathAt, breathStart = -1f;
     private boolean breathed;
-    private final RectF skipKey = new RectF(), helpKey = new RectF();
+    private final RectF skipKey = new RectF(), helpKey = new RectF(), wayKey = new RectF();
     /** The page about the game: open or not, how far scrolled, and how fast it still glides. */
     private boolean helpOpen;
     private float helpScroll, helpGlide, helpDownY, helpDownScroll, helpLastY;
@@ -132,13 +139,13 @@ final class Board extends View {
     private final Path thickP = new Path(), iceP = new Path(), snowP = new Path(),
             lavaP = new Path(), steamP = new Path(), slimeP = new Path();
 
-    private int bgTop, bgBottom, ink, muted, glass, glassHi, tint, waterInk, murk, panel;
+    private int bgTop, bgBottom, ink, muted, glass, glassHi, tint, accent, waterInk, murk, panel;
     private Shader background;
     private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint line = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final TextPaint text = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private final Path mazePath = new Path(), clean = new Path(), murky = new Path();
-    private final RectF oval = new RectF(), card = new RectF(), button = new RectF(), seg = new RectF();
+    private final RectF oval = new RectF(), card = new RectF(), button = new RectF(), second = new RectF(), seg = new RectF();
     /** The keys along the top: sound, tone, language on the left, a new flask on the right. */
     private final RectF soundKey = new RectF(), toneKey = new RectF(), langKey = new RectF();
     private final RectF langEnglish = new RectF(), langLoad = new RectF(), langMenu = new RectF(),
@@ -181,7 +188,7 @@ final class Board extends View {
     private final Typeface sans = Typeface.create("sans-serif", Typeface.NORMAL);
     private final Typeface sansMedium = Typeface.create("sans-serif-medium", Typeface.NORMAL);
 
-    private String cardTitle, cardBody, cardAction;
+    private String cardTitle, cardBody, cardAction, cardSecond = "";
     private StaticLayout bodyLayout;
     private String laidBody;
     private int laidWidth = -1;
@@ -193,11 +200,7 @@ final class Board extends View {
             lastFrame = now;
             // while the page about the game is open, the flask waits
             if (helpOpen) glide(dt);
-            else {
-                update(dt);
-                // the way through is shown at twice the pace
-                if (demo) update(dt);
-            }
+            else update(dt);
             invalidate();
             if (running) Choreographer.getInstance().postFrameCallback(this);
         }
@@ -293,8 +296,10 @@ final class Board extends View {
     private void palette() {
         int[] p = TONES[tone][night() ? 1 : 0];
         bgTop = p[0]; bgBottom = p[1]; ink = p[2]; muted = p[3]; glass = p[4];
-        glassHi = p[5]; tint = p[6]; waterInk = p[7]; murk = p[8]; panel = p[9];
+        glassHi = p[5]; tint = p[6]; accent = p[7]; panel = p[8];
         boolean dark = night();
+        waterInk = WATER[dark ? 1 : 0];
+        murk = MURK[dark ? 1 : 0];
         background = null;
         noteLayout = null;
     }
@@ -361,6 +366,7 @@ final class Board extends View {
 
     private void newFlask() {
         demo = false;
+        byHand = false;
         original = dealt();
         water.reset(original.fresh());
         rules();
@@ -369,12 +375,13 @@ final class Board extends View {
     }
 
     /**
-     * A flask poured poorly or not at all is played once more by the game
-     * itself, from the start and twice as fast, to show one way through;
-     * then a new flask comes. A tap skips it.
+     * When asked, at any moment, the game plays the flask itself, from the
+     * start and at its own pace, to show one way through. A tap stops it.
+     * Either way the card comes after: the same flask again, or a new one.
      */
     private void showTheWay() {
         demo = true;
+        byHand = true;
         water.reset(original.fresh());
         hand = new Hand(water.maze);
         rules();
@@ -384,8 +391,26 @@ final class Board extends View {
         noteLayout = null;
     }
 
-    private boolean weak() {
-        return water.flaskBest < 5 || water.totalOut < waterDrops / 10;
+    /** The hand is done, or stopped: its water stays in the flask, and the card asks what next. */
+    private void shown() {
+        demo = false;
+        mode = OVER;
+        stroking = false;
+        cardTitle = Words.s("shown_title");
+        cardBody = Words.s("shown_text");
+        cardAction = Words.s("again");
+        cardSecond = Words.s("replay");
+        bodyLayout = null;
+    }
+
+    /** The flask handed out last, once more from the start, for the player. */
+    private void replay() {
+        demo = false;
+        byHand = false;
+        water.reset(original.fresh());
+        rules();
+        buildMaze();
+        begin(false);
     }
 
     /** The flask in hand starts: the rain begins, and with the recorded tunes, a tune. */
@@ -393,6 +418,7 @@ final class Board extends View {
         spawned = 0;
         lastSpawn = -99f;
         lastTurn = -99f;
+        lastStroke = -99f;
         lastTen = 0;
         shownBest = shownOut = -1;
         spin = 0;
@@ -423,7 +449,8 @@ final class Board extends View {
             else if (o.kind == Maze.SEED) seedCount++;
             else floatCount++;
         }
-        pops = plugs > 0 ? 1 : 0;
+        decided = plugs == 0;
+        stroking = false;
 
         System.arraycopy(m.falls, 0, falls, 0, Water.VOLUMES);
         waterDrops = 0;
@@ -436,7 +463,7 @@ final class Board extends View {
             note.append(Words.f("note_time", Math.round(setAt - FIRST_SPAWN)));
         }
         String[] more = {
-                plugs > 1 ? "note_bubble_two" : plugs > 0 ? "note_bubble" : null,
+                plugs > 0 ? "note_bubble" : null,
                 seedCount > 0 ? "note_seeds" : null,
                 m.breathing ? "note_breath" : null,
                 floatCount > 0 ? "note_float" : null,
@@ -458,6 +485,7 @@ final class Board extends View {
 
     /** The card after a flask; written again whenever the numbers under it change. */
     private void tell() {
+        if (byHand) return;
         if (water.flaskBest == shownBest && water.totalOut == shownOut) return;
         shownBest = water.flaskBest;
         shownOut = water.totalOut;
@@ -469,6 +497,7 @@ final class Board extends View {
             cardBody = Words.s("over_none_text");
         }
         cardAction = Words.s("again");
+        cardSecond = Words.s("show_way");
     }
 
     private void update(float dt) {
@@ -483,8 +512,13 @@ final class Board extends View {
             float rot;
             if (demo) {
                 boolean rained = spawned == Water.VOLUMES && water.t > lastSpawn + 3f;
-                int plug = hand.pop(water, rained);
-                if (plug >= 0) popOut(water.maze.obstacles[plug]);
+                if (hand.pop(rained)) {
+                    Maze.Obstacle[] obs = water.maze.obstacles;
+                    for (int i = 0; i < obs.length && i < water.maze.pops.length; i++) {
+                        if (water.maze.pops[i] && obs[i].active) popOut(obs[i]);
+                    }
+                    decided = true;
+                }
                 float goal = hand.goal(water, rained, sub);
                 if (water.maze.wild && !set) {
                     grabbed = true;
@@ -519,7 +553,7 @@ final class Board extends View {
         int ten = water.burst / 10;
         if (ten > lastTen) performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
         lastTen = ten;
-        if (!demo && water.flaskBest > record) {
+        if (!demo && !byHand && water.flaskBest > record) {
             if (recordAt < 0 || water.t - recordAt > 3f) {
                 if (record > 0) {
                     recordAt = water.t;
@@ -536,14 +570,16 @@ final class Board extends View {
             if (!airborne) {
                 boolean empty = !water.live();
                 float since = Math.max(water.lastExit, lastSpawn);
-                // a set flask cannot be turned, so touching it is not playing
-                if (!set && !demo) since = Math.max(since, lastTurn);
+                // a hand turning the glass is playing; a set flask cannot be turned,
+                // so there only a stroke over its bubbles still counts
+                if (!demo) since = Math.max(since, set ? lastStroke : lastTurn);
                 boolean still = water.t - since > IDLE;
                 if (demo) {
                     boolean shown = hand.walked() && water.totalOut > 0 && water.t - Math.max(water.lastExit, hand.end()) > 2.5f;
-                    if (shown || empty || (set && still) || water.t > 150f) newFlask();
+                    if (shown || empty || (set && still) || water.t > 150f) shown();
                 } else if (empty || still) {
-                    if (weak()) showTheWay(); else mode = OVER;
+                    // the card only offers; the flask stays in the player's hands
+                    mode = OVER;
                 }
             }
         }
@@ -636,7 +672,6 @@ final class Board extends View {
         Water wa = water;
         o.active = false;
         o.gone = wa.t;
-        pops = 0;
         float mid = (o.r0 + o.r1) / 2 * wa.r, a = o.a + wa.ang;
         tapX = wa.cx + (float) Math.cos(a) * mid;
         tapY = wa.cy + (float) Math.sin(a) * mid;
@@ -649,21 +684,38 @@ final class Board extends View {
         performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
     }
 
-    /** A tap on a bubble pops it, if the flask's one pop is still there. */
-    private void pop(float x, float y) {
-        if (pops <= 0) return;
+    /**
+     * The bubble under a finger, or -1. A bubble corking the flask's own
+     * glass is reached as well as one across a corridor.
+     */
+    private int bubbleAt(float x, float y) {
         Water wa = water;
-        for (Maze.Obstacle o : wa.maze.obstacles) {
+        Maze.Obstacle[] obs = wa.maze.obstacles;
+        int best = -1;
+        double near = Double.MAX_VALUE;
+        for (int i = 0; i < obs.length; i++) {
+            Maze.Obstacle o = obs[i];
             if (o.kind != Maze.BUBBLE || !o.active) continue;
-            float mid = (o.r0 + o.r1) / 2 * wa.r, a = o.a + wa.ang;
+            float mid = o.mid() * wa.r, a = o.a + wa.ang;
             float px = wa.cx + (float) Math.cos(a) * mid, py = wa.cy + (float) Math.sin(a) * mid;
-            float reach = Math.max(32 * dp, Math.abs(o.r1 - o.r0) * wa.r * 0.7f);
-            if (Math.hypot(x - px, y - py) < reach) {
-                popOut(o);
-                performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
-                return;
-            }
+            float reach = Math.max(26 * dp, o.size * wa.r * 1.2f);
+            double d = Math.hypot(x - px, y - py);
+            if (d < reach && d < near) { near = d; best = i; }
         }
+        return best;
+    }
+
+    /**
+     * One stroke decides the bubbles: every bubble the finger passes over
+     * pops, and when the finger lifts, the rest stay for the whole flask.
+     */
+    private void strokeOver(float x, float y) {
+        int i = bubbleAt(x, y);
+        if (i < 0) return;
+        popOut(water.maze.obstacles[i]);
+        tapAt = -99f;
+        lastStroke = water.t;
+        performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
     }
 
     // ---------- touch ----------
@@ -685,8 +737,10 @@ final class Board extends View {
         if (toneKey.contains(x, y)) return TONE;
         if (langKey.contains(x, y)) return LANGUAGE;
         if (mode == PLAY && !skipKey.isEmpty() && skipKey.contains(x, y)) return SKIP;
+        if (!wayKey.isEmpty() && wayKey.contains(x, y)) return WAY;
         if (helpKey.contains(x, y)) return HELP;
         if (mode != PLAY && button.contains(x, y)) return ACTION;
+        if (mode == OVER && !second.isEmpty() && second.contains(x, y)) return SECOND;
         return NONE;
     }
 
@@ -710,6 +764,12 @@ final class Board extends View {
                 break;
             case ACTION:
                 if (mode == MENU) begin(true); else newFlask();
+                break;
+            case SECOND:
+                if (byHand) replay(); else showTheWay();
+                break;
+            case WAY:
+                showTheWay();
                 break;
             case SOUND: {
                 int next = music.which() == Music.MUSIC ? Music.SILENCE : Music.MUSIC;
@@ -790,7 +850,11 @@ final class Board extends View {
         switch (e.getActionMasked()) {
             case MotionEvent.ACTION_DOWN: {
                 int on = target(ex, ey);
-                if (demo && on != SOUND && on != TONE && on != HELP) return true;
+                if (demo && on != SOUND && on != TONE && on != HELP) {
+                    // a tap stops the hand; the card says what next
+                    if (on == NONE) shown();
+                    return true;
+                }
                 if (on != NONE) {
                     // keys are not glass: a touch on them never turns the flask
                     pressed = on;
@@ -801,6 +865,12 @@ final class Board extends View {
                     return true;
                 }
                 if (mode != PLAY && card.contains(ex, ey)) return true;
+                if (!decided && mode != MENU && bubbleAt(ex, ey) >= 0) {
+                    // a stroke that starts on a bubble pops; it never turns the flask
+                    stroking = true;
+                    strokeOver(ex, ey);
+                    return true;
+                }
                 dragging = true;
                 moved = false;
                 downX = ex;
@@ -812,6 +882,10 @@ final class Board extends View {
                 return true;
             }
             case MotionEvent.ACTION_MOVE:
+                if (stroking) {
+                    strokeOver(ex, ey);
+                    return true;
+                }
                 if (dragging && !demo) {
                     if (Math.hypot(ex - downX, ey - downY) > 8 * dp) moved = true;
                     float a = angleAt(ex, ey);
@@ -822,26 +896,30 @@ final class Board extends View {
                     // near the centre the angle jumps with every pixel: ignore it there
                     if (far > water.r * 0.15f) {
                         if (water.maze.wild) target += d; else pendingRot += d;
-                        if (!set) lastTurn = water.t;
+                        lastTurn = water.t;
                         // turning a flask that still holds water takes the card away again
-                        if (mode == OVER && water.live() && !set) mode = PLAY;
+                        if (mode == OVER && water.live() && !set && !byHand) mode = PLAY;
                     }
                     lastTouch = a;
                 }
                 return true;
             case MotionEvent.ACTION_UP:
-                if (pressed != NONE) {
+                if (stroking) {
+                    // the finger lifts: the bubbles left are kept for the whole flask
+                    stroking = false;
+                    decided = true;
+                } else if (pressed != NONE) {
                     if (target(ex, ey) == pressed) act(pressed);
-                } else if (demo) {
-                    newFlask();
-                } else if (dragging && !moved) {
-                    pop(ex, ey);
                 }
                 pressed = NONE;
                 dragging = false;
                 grabbed = false;
                 return true;
             case MotionEvent.ACTION_CANCEL:
+                if (stroking) {
+                    stroking = false;
+                    decided = true;
+                }
                 pressed = NONE;
                 dragging = false;
                 grabbed = false;
@@ -1092,9 +1170,10 @@ final class Board extends View {
     }
 
     /**
-     * A bubble of air across a corridor: a few round bubbles crowded
-     * together, clear, with a bright rim and a glint. Popped, they swell a
-     * little and are gone.
+     * A bubble of air: one round bubble, wall to wall across a corridor or
+     * corking a gap, clear, with a bright rim and a glint. While the flask's
+     * decision about its bubbles is still open, a faint ring breathes round
+     * each. Popped, it swells a little and is gone.
      */
     private void bubble(Canvas c, Maze.Obstacle o) {
         Water wa = water;
@@ -1103,32 +1182,34 @@ final class Board extends View {
             k = (wa.t - o.gone) / 0.35f;
             if (o.gone < 0 || k >= 1) return;
         }
-        float across = (wa.pr + wa.wt) * 1.1f;
-        if (o.active && pops > 0) {
-            // a faint pulse says the bubble can still be popped
+        float mid = o.mid() * wa.r, bx = o.cs * mid, by = o.sn * mid;
+        float size = o.size * wa.r * (1 + 0.45f * k), fade = 1 - k;
+        if (o.active && !decided && !demo) {
             float pulse = 0.5f + 0.5f * (float) Math.sin(wa.t * 3.0f);
             line.setColor(waterInk);
-            line.setAlpha((int) (16 + 26 * pulse));
-            line.setStrokeWidth(across * 2.8f);
-            c.drawLine(o.cs * o.r0 * wa.r, o.sn * o.r0 * wa.r, o.cs * o.r1 * wa.r, o.sn * o.r1 * wa.r, line);
+            line.setAlpha((int) (40 + 60 * pulse));
+            line.setStrokeWidth(1.5f * dp);
+            c.drawCircle(bx, by, size + (3 + 3 * pulse) * dp, line);
         }
-        float fade = 1 - k;
-        for (int i = 0; i < o.grainU.length; i++) {
-            float rad = (o.r0 + (o.r1 - o.r0) * o.grainU[i]) * wa.r;
-            float off = o.grainV[i] * across;
-            float bx = o.cs * rad - o.sn * off, by = o.sn * rad + o.cs * off;
-            float size = o.grainS[i] * across * (1 + 0.5f * k);
-            fill.setColor(0xFFFFFFFF);
-            fill.setAlpha((int) (34 * fade));
-            c.drawCircle(bx, by, size, fill);
-            line.setColor(glassHi);
-            line.setAlpha((int) (210 * fade));
-            line.setStrokeWidth(Math.max(1, 1.4f * dp));
-            c.drawCircle(bx, by, size, line);
-            fill.setAlpha((int) (200 * fade));
-            c.drawCircle(bx - size * 0.38f, by - size * 0.38f, size * 0.2f, fill);
-        }
+        fill.setColor(waterInk);
+        fill.setAlpha((int) (46 * fade));
+        c.drawCircle(bx, by, size, fill);
+        line.setColor(0xFFF2FAFF);
+        line.setAlpha((int) (225 * fade));
+        line.setStrokeWidth(Math.max(1, 1.6f * dp));
+        c.drawCircle(bx, by, size, line);
+        line.setColor(waterInk);
+        line.setAlpha((int) (120 * fade));
+        line.setStrokeWidth(Math.max(1, 0.8f * dp));
+        c.drawCircle(bx, by, size + 1.2f * dp, line);
+        // the glint keeps to the top left of the screen, however the glass turns
+        double g = Math.toRadians(-135) - wa.ang;
+        float gx = bx + (float) Math.cos(g) * size * 0.5f, gy = by + (float) Math.sin(g) * size * 0.5f;
+        fill.setColor(0xFFFFFFFF);
+        fill.setAlpha((int) (215 * fade));
+        c.drawCircle(gx, gy, size * 0.17f, fill);
         fill.setAlpha(255);
+        line.setAlpha(255);
     }
 
     /** A pearl with its sheen: a base colour, a soft light above, a bright point. */
@@ -1277,11 +1358,21 @@ final class Board extends View {
         else skipKey.setEmpty();
         float helpRight = skipKey.isEmpty() ? w - side : skipKey.left - 10 * dp;
         helpKey.set(helpRight - 2 * key, keysY - key, helpRight, keysY + key);
+        // the hand that shows the way, at any moment of a flask, never while it is showing
+        // a pill with a word, so it is not taken for one more round key
+        if (mode != MENU && !demo) {
+            text.setTypeface(sansMedium);
+            text.setTextSize(15 * dp);
+            float pw = text.measureText(Words.s("demo")) + 32 * dp;
+            wayKey.set(helpKey.left - 10 * dp - pw, keysY - key, helpKey.left - 10 * dp, keysY + key);
+        } else {
+            wayKey.setEmpty();
+        }
 
         roundKey(soundKey, SOUND);
         drawSound(c, soundKey.centerX(), soundKey.centerY(), music.which() == Music.MUSIC);
         roundKey(toneKey, TONE);
-        fill.setColor(waterInk);
+        fill.setColor(accent);
         c.drawCircle(toneKey.centerX(), toneKey.centerY(), 8 * dp, fill);
         line.setColor(glassHi);
         line.setAlpha(140);
@@ -1292,18 +1383,38 @@ final class Board extends View {
         text.setTypeface(sansMedium);
         text.setTextSize(14 * dp);
         text.setTextAlign(Paint.Align.CENTER);
-        text.setColor(pressed == LANGUAGE || langOpen ? waterInk : ink);
+        text.setColor(pressed == LANGUAGE || langOpen ? accent : ink);
         String tag = Words.code();
         c.drawText(tag, langKey.centerX(), langKey.centerY() + 5 * dp, text);
         if (!skipKey.isEmpty()) {
             roundKey(skipKey, SKIP);
             drawTurn(c, skipKey.centerX(), skipKey.centerY());
         }
+        if (!wayKey.isEmpty()) {
+            fill.setColor(panel);
+            c.drawRoundRect(wayKey, key, key, fill);
+            if (pressed == WAY) {
+                fill.setColor(accent);
+                fill.setAlpha(50);
+                c.drawRoundRect(wayKey, key, key, fill);
+                fill.setAlpha(255);
+            }
+            line.setColor(accent);
+            line.setAlpha(150);
+            line.setStrokeWidth(1.2f * dp);
+            c.drawRoundRect(wayKey, key, key, line);
+            line.setAlpha(255);
+            text.setTypeface(sansMedium);
+            text.setTextSize(15 * dp);
+            text.setTextAlign(Paint.Align.CENTER);
+            text.setColor(accent);
+            c.drawText(Words.s("demo"), wayKey.centerX(), wayKey.centerY() + 5 * dp, text);
+        }
         roundKey(helpKey, HELP);
         text.setTypeface(serif);
         text.setTextSize(22 * dp);
         text.setTextAlign(Paint.Align.CENTER);
-        text.setColor(pressed == HELP ? waterInk : ink);
+        text.setColor(pressed == HELP ? accent : ink);
         c.drawText("?", helpKey.centerX(), helpKey.centerY() + 7.5f * dp, text);
 
         float since = water.t - saidAt;
@@ -1339,7 +1450,7 @@ final class Board extends View {
         float bead = 3.5f * dp, step = 13 * dp, y = top + 22 * dp;
         float x0 = w / 2f - step * (Maze.TIERS - 1) / 2f;
         for (int i = 0; i < Maze.TIERS; i++) {
-            fill.setColor(i < water.maze.tier ? waterInk : glass);
+            fill.setColor(i < water.maze.tier ? accent : glass);
             c.drawCircle(x0 + i * step, y, bead, fill);
         }
 
@@ -1369,7 +1480,7 @@ final class Board extends View {
         fill.setColor(panel);
         canvasNow.drawCircle(k.centerX(), k.centerY(), k.width() / 2, fill);
         if (pressed == which) {
-            fill.setColor(waterInk);
+            fill.setColor(accent);
             fill.setAlpha(50);
             canvasNow.drawCircle(k.centerX(), k.centerY(), k.width() / 2, fill);
             fill.setAlpha(255);
@@ -1405,7 +1516,7 @@ final class Board extends View {
 
     /** A turning arrow: most of a ring, and its head. */
     private void drawTurn(Canvas c, float kx, float ky) {
-        line.setColor(pressed == SKIP ? waterInk : ink);
+        line.setColor(pressed == SKIP ? accent : ink);
         line.setStrokeWidth(2 * dp);
         float ar = 8 * dp;
         oval.set(kx - ar, ky - ar, kx + ar, ky + ar);
@@ -1456,11 +1567,11 @@ final class Board extends View {
 
     private void row(Canvas c, RectF at, String label, String code, boolean chosen) {
         text.setTextAlign(Paint.Align.LEFT);
-        text.setColor(chosen ? waterInk : ink);
+        text.setColor(chosen ? accent : ink);
         c.drawText(label, at.left + 18 * dp, at.centerY() + 5 * dp, text);
         if (code.length() > 0) {
             text.setTextAlign(Paint.Align.RIGHT);
-            text.setColor(chosen ? waterInk : muted);
+            text.setColor(chosen ? accent : muted);
             c.drawText(code, at.right - 18 * dp, at.centerY() + 5 * dp, text);
         }
     }
@@ -1520,8 +1631,22 @@ final class Board extends View {
             laidWidth = inner;
             laidBody = cardBody;
         }
+        // The headline keeps its 40dp only while it fits; a long language or a
+        // three-digit pour shrinks it to the card's inner width instead of
+        // letting it run off the screen.
         float titleSize = 40 * dp, buttonH = 48 * dp;
-        float height = pad + titleSize + 10 * dp + bodyLayout.getHeight() + 20 * dp + buttonH + 20 * dp;
+        boolean two = mode == OVER && cardSecond.length() > 0;
+        text.setTypeface(sansMedium);
+        text.setTextSize(17 * dp);
+        float bw1 = text.measureText(cardAction) + 52 * dp, bw2 = two ? text.measureText(cardSecond) + 44 * dp : 0;
+        // side by side when they fit, the second under the first when they do not
+        boolean row = !two || bw1 + 12 * dp + bw2 <= inner;
+        float buttons = row ? buttonH : 2 * buttonH + 10 * dp;
+        text.setTypeface(serif);
+        text.setTextSize(titleSize);
+        float titleWidth = text.measureText(cardTitle);
+        if (titleWidth > inner) titleSize = Math.max(22 * dp, titleSize * inner / titleWidth);
+        float height = pad + titleSize + 10 * dp + bodyLayout.getHeight() + 20 * dp + buttons + 20 * dp;
         float left = (w - width) / 2, bottom = h - insetBottom - 36 * dp;
         card.set(left, bottom - height, left + width, bottom);
         fill.setColor(panel);
@@ -1545,9 +1670,26 @@ final class Board extends View {
 
         text.setTypeface(sansMedium);
         text.setTextSize(17 * dp);
-        float bw = text.measureText(cardAction) + 52 * dp;
-        button.set(x, y, x + bw, y + buttonH);
-        fill.setColor(waterInk);
+        button.set(x, y, x + bw1, y + buttonH);
+        if (two) {
+            float sx = row ? button.right + 12 * dp : x, sy = row ? y : y + buttonH + 10 * dp;
+            second.set(sx, sy, sx + bw2, sy + buttonH);
+            if (pressed == SECOND) {
+                fill.setColor(accent);
+                fill.setAlpha(40);
+                c.drawRoundRect(second, buttonH / 2, buttonH / 2, fill);
+                fill.setAlpha(255);
+            }
+            line.setColor(accent);
+            line.setStrokeWidth(1.5f * dp);
+            c.drawRoundRect(second, buttonH / 2, buttonH / 2, line);
+            text.setColor(accent);
+            text.setTextAlign(Paint.Align.CENTER);
+            c.drawText(cardSecond, second.centerX(), second.centerY() + text.getTextSize() * 0.35f, text);
+        } else {
+            second.setEmpty();
+        }
+        fill.setColor(accent);
         if (pressed == ACTION) fill.setAlpha(200);
         c.drawRoundRect(button, buttonH / 2, buttonH / 2, fill);
         fill.setAlpha(255);
@@ -1662,7 +1804,7 @@ final class Board extends View {
         c.drawText(Words.s("app_name"), helpSheet.left + pad, helpSheet.top + 42 * dp, text);
         float key = 18 * dp;
         helpClose.set(helpSheet.right - pad - 2 * key, helpSheet.top + 14 * dp, helpSheet.right - pad, helpSheet.top + 14 * dp + 2 * key);
-        fill.setColor(waterInk);
+        fill.setColor(accent);
         fill.setAlpha(40);
         c.drawCircle(helpClose.centerX(), helpClose.centerY(), key, fill);
         fill.setAlpha(255);
@@ -1733,7 +1875,7 @@ final class Board extends View {
             c.drawLine(x, y, x, y - s * 0.45f, line);
             c.drawLine(x, y, x + s * 0.3f, y + s * 0.2f, line);
         } else if (kind.equals("bubble")) {
-            float[][] b = {{-0.35f, 0.3f, 0.45f}, {0.25f, -0.3f, 0.38f}, {0.4f, 0.4f, 0.3f}};
+            float[][] b = {{0f, 0f, 0.7f}};
             for (float[] q : b) {
                 float bx = x + q[0] * s, by = y + q[1] * s, r = q[2] * s;
                 fill.setColor(waterInk);

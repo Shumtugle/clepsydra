@@ -36,6 +36,21 @@ over_none	Mitään ei päässyt läpi
 # Keep the neck up while the water falls, then find a way down to the bottom opening.
 over_none_text	Pidä kaula ylhäällä, kun vettä sataa, ja etsi sitten tie alas pohjan aukolle.
 
+# Show the way
+show_way	Näytä tie
+
+# One way through
+shown_title	Yksi tie läpi
+
+# Play this flask again, or take a new one.
+shown_text	Pelaa tämä pullo uudelleen tai ota uusi.
+
+# Play it again
+replay	Uudelleen
+
+# Demo
+demo	Demo
+
 # turns left
 turns_left	kierroksia jäljellä
 
@@ -51,11 +66,8 @@ note_turns	Tätä pulloa voi kääntää enintään {n} kierrosta.
 # This flask turns for {n} seconds, then sets.
 note_time	Tätä pulloa voi kääntää {n} sekuntia, sitten se jähmettyy.
 
-# A bubble of air blocks a corridor. Tap it to pop it, once per flask.
-note_bubble	Ilmakupla tukkii käytävän. Puhkaise se napauttamalla – kerran pulloa kohden.
-
-# Two bubbles and only one pop. Choose well.
-note_bubble_two	Kaksi kuplaa ja vain yksi puhkaisu. Valitse viisaasti.
+# Bubbles of air. Some shut the way, one may hold the water in. Pop the ones that must go in one stroke; the rest stay.
+note_bubble	Ilmakuplia. Osa tukkii tien, joku voi pitää veden sisällä. Puhkaise tarpeettomat yhdellä vedolla; loput jäävät.
 
 # Seeds like pearls cling to the glass. Wet them, and a flower opens across the way.
 note_seeds	Lasiin on tarttunut helmen kaltaisia siemeniä. Kastele ne, niin kukka avautuu tien poikki.
@@ -81,8 +93,8 @@ note_lava	Laavaa on tulossa. Veteen osuva laava keittää sen höyryksi.
 # Slime is coming. It makes the water thick and slow.
 note_slime	Levää on tulossa. Se tekee vedestä sakeaa ja hidasta.
 
-# Here is one way through, twice as fast. Tap to skip it.
-demo_note	Tässä yksi tie läpi, kaksinkertaisella nopeudella. Ohita napauttamalla.
+# Here is one way through. Tap to stop.
+demo_note	Tässä yksi tie läpi. Pysäytä napauttamalla.
 
 # music
 music	musiikki
@@ -90,14 +102,14 @@ music	musiikki
 # silence
 silence	hiljaisuus
 
-# sea
-sea	meri
+# glass
+sea	lasi
 
-# amber
-amber	meripihka
+# brass
+amber	messinki
 
-# moss
-moss	sammal
+# stone
+moss	kivi
 
 # English
 english	English
@@ -159,8 +171,8 @@ t_time	Pulloa voi kääntää vain tietyn ajan, sitten se jähmettyy.
 # Bubbles
 t_bubble_title	Kuplat
 
-# A bubble of air across a corridor. A tap pops it, once a flask; with two, only the right one opens a way.
-t_bubble	Ilmakupla käytävän poikki. Napautus puhkaisee sen, kerran pulloa kohden; kahdesta vain oikea avaa tien.
+# Round bubbles of air: across a corridor, in a gap, or in the glass of the flask itself. One stroke a flask: every bubble the finger passes over pops, and the rest stay. Some shut the way; one in the flask's own glass holds the water in, and popped, lets it run out.
+t_bubble	Pyöreitä ilmakuplia: käytävän poikki, aukossa tai itse pullon lasissa. Yksi veto pulloa kohden: jokainen kupla, jonka yli sormi kulkee, puhkeaa, ja loput jäävät. Osa tukkii tien; pullon omassa lasissa oleva pitää veden sisällä, ja puhkaistuna päästää sen valumaan ulos.
 
 # Seeds
 t_seed_title	Siemenet
@@ -213,8 +225,8 @@ t_breath	Kun sade on ohi, tavallinen pullo voi hengittää, ja sen labyrintti mu
 # The keys
 help_keys_title	Painikkeet
 
-# Along the top: sound, tone and language on the left; this page and a new flask, at any time, on the right.
-help_keys	Ylhäällä vasemmalla ääni, sävy ja kieli; oikealla tämä sivu ja uusi pullo milloin tahansa.
+# Along the top: sound, tone and language on the left; on the right, Demo, which plays the flask for you from the start, this page, and a new flask, at any time.
+help_keys	Ylhäällä vasemmalla ääni, sävy ja kieli; oikealla Demo, joka pelaa pullon puolestasi alusta, tämä sivu ja uusi pullo milloin tahansa.
 
 # No network, no permissions, no advertising. The record stays on the phone.
 help_quiet	Ei verkkoa, ei lupia, ei mainoksia. Ennätys pysyy puhelimessa.

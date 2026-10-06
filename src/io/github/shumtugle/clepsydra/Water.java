@@ -448,7 +448,7 @@ final class Water {
             }
         }
         for (Maze.Obstacle o : maze.obstacles) {
-            float reach, extra;
+            float reach;
             if (o.kind == Maze.FLOAT) {
                 // a float is round and solid; water goes round it
                 float fx0 = o.cs * o.s * r, fy0 = o.sn * o.s * r;
@@ -463,13 +463,21 @@ final class Water {
                 continue;
             }
             if (o.kind == Maze.BUBBLE) {
+                // one round bubble, across a corridor or corking a gap
                 if (!o.active) continue;
-                reach = 1f;
-                extra = pr;
+                float mid = o.mid() * r, bx = o.cs * mid, by = o.sn * mid;
+                float ex = lx - bx, ey = ly - by, dd = (float) Math.sqrt(ex * ex + ey * ey);
+                float reachB = o.size * r + pr;
+                if (dd < reachB && dd > 1e-6f) {
+                    float pen = reachB - dd, nx = ex / dd, ny = ey / dd;
+                    lx += nx * pen;
+                    ly += ny * pen;
+                    contact(i, nx, ny, pen, ca, sa, omega);
+                }
+                continue;
             } else {
                 if (o.grow <= 0) continue;
                 reach = o.grow;
-                extra = 0;
             }
             float ax = o.cs * o.r0 * r, ay = o.sn * o.r0 * r;
             float len = (o.r1 - o.r0) * reach * r;
@@ -477,7 +485,7 @@ final class Water {
             float u = ((lx - ax) * sx + (ly - ay) * sy) / (sx * sx + sy * sy + 1e-6f);
             u = u < 0 ? 0 : u > 1 ? 1 : u;
             float ex = lx - (ax + sx * u), ey = ly - (ay + sy * u);
-            float dd = (float) Math.sqrt(ex * ex + ey * ey), reachD = d + extra;
+            float dd = (float) Math.sqrt(ex * ex + ey * ey), reachD = d;
             if (dd < reachD && dd > 1e-6f) {
                 float pen = reachD - dd, nx = ex / dd, ny = ey / dd;
                 lx += nx * pen;

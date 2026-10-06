@@ -1,5 +1,19 @@
 # Changes
 
+## 1.01
+
+- Bubbles are single round bubbles, and there are more of them: one shuts
+  the way, others stand about, and one may cork a vent in the flask's own
+  glass, holding the water in. One stroke a flask pops every bubble the
+  finger passes over; the rest stay.
+- The way through is played only when asked, from the Demo key in the top row or
+  from the card, at any moment and at the game's own pace; a tap stops it.
+  A flask is never taken out of the player's hands.
+- A flask that has set and gone still ends; a stroke over its bubbles still counts as play.
+- Tones are materials now: glass, brass and stone, with their rooms. Water
+  is the same in every tone.
+- A long result no longer runs off the edge of the card.
+
 ## 1.00
 
 The first release.

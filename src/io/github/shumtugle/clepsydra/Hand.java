@@ -2,14 +2,14 @@ package io.github.shumtugle.clepsydra;
 
 /**
  * The hand that knows the way. It keeps the neck up while the rain falls,
- * leans it aside while snow or lava falls at the neck, pops the right
- * bubble, and then walks the maze's own plan, one stop after another, with
+ * leans it aside while snow or lava falls at the neck, pops the bubbles
+ * that shut the way and keeps the rest, and then walks the maze's own plan, one stop after another, with
  * a pause at each for the water to pass. If nothing has come out by the end
  * (ice in the way, thick water slow on its way), it waits and walks the plan
  * once more from upright, twice at most.
  *
  * The same hand tries every flask before it is handed out, and plays a flask
- * back to show the way through.
+ * from the start, at the game's own pace, when asked to show the way.
  */
 final class Hand {
     /** The fastest it turns the flask, per small step. */
@@ -33,12 +33,11 @@ final class Hand {
         return end;
     }
 
-    /** Which bubble to pop now, once, or -1. */
-    int pop(Water w, boolean rained) {
-        if (!rained || popped) return -1;
+    /** Whether the bubbles that have to go are to be popped now; true once. */
+    boolean pop(boolean rained) {
+        if (!rained || popped) return false;
         popped = true;
-        Maze m = w.maze;
-        return m.pop >= 0 && m.pop < m.obstacles.length ? m.pop : -1;
+        return true;
     }
 
     /** Where the flask should stand now. */
@@ -103,8 +102,7 @@ final class Hand {
                 lastSpawn = w.t;
             }
             boolean rained = spawned == Water.VOLUMES && w.t > lastSpawn + 3f;
-            int plug = hand.pop(w, rained);
-            if (plug >= 0) w.maze.obstacles[plug].active = false;
+            if (hand.pop(rained)) popAll(w.maze, m.pops);
             float rot = hand.goal(w, rained, dt) - w.ang;
             rot = rot < -TURN ? -TURN : rot > TURN ? TURN : rot;
             if (!set && w.t >= setAt) set = true;
@@ -117,5 +115,41 @@ final class Hand {
             if (set && w.t - Math.max(lastSpawn, w.lastExit) > 10f) return false;
         }
         return false;
+    }
+
+    /** Pops every bubble marked to go. */
+    static void popAll(Maze m, boolean[] pops) {
+        for (int i = 0; i < pops.length && i < m.obstacles.length; i++) if (pops[i]) m.obstacles[i].active = false;
+    }
+
+    /**
+     * Plays a flask through, out of sight, with the given bubbles popped once
+     * the rain is over, and gives back how much water left through the
+     * bottom and the longest pour. Nothing holds the hand back here, neither
+     * a count of turns nor a clock: it measures what the bubbles do.
+     */
+    static int[] play(Maze made, boolean[] pops, java.util.Random rnd) {
+        Maze m = made.fresh();
+        Water w = new Water();
+        w.size(1080, 2400, 540, 1272, 453);
+        w.reset(m);
+        Hand hand = new Hand(m);
+        float dt = 1f / 240, lastSpawn = -99f;
+        int spawned = 0;
+        for (int k = 0; k < 240 * 100; k++) {
+            w.t += dt;
+            if (spawned < Water.VOLUMES && w.t >= Maze.FIRST_SPAWN + spawned * Maze.SPAWN_EVERY) {
+                w.spawn(w.cx + (rnd.nextFloat() * 0.2f - 0.1f) * w.r, m.falls[spawned]);
+                spawned++;
+                lastSpawn = w.t;
+            }
+            boolean rained = spawned == Water.VOLUMES && w.t > lastSpawn + 3f;
+            if (hand.pop(rained)) popAll(w.maze, pops);
+            float rot = hand.goal(w, rained, dt) - w.ang;
+            rot = rot < -TURN ? -TURN : rot > TURN ? TURN : rot;
+            w.step(dt, rot);
+            if (hand.walked() && w.t - hand.end() > 6f) break;
+        }
+        return new int[] {w.totalOut, w.flaskBest};
     }
 }

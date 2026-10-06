@@ -31,9 +31,12 @@ so long; then it sets fast. The allowance is never mean: the generator works
 out the least turning that leads water from the neck to the bottom, and the
 flask allows a third more, and a little over a quarter turn besides.
 
-Some corridors hold a bubble of air. A tap pops it, once per flask; with
-two bubbles, only one can go, and the maze is made so that the right one
-opens a way. Some walls hold seeds, pearls stuck to the glass: water runs
+Some flasks hold bubbles of air, one round bubble each: across a corridor,
+corking a gap, or corking a vent in the flask's own glass. The flask's one
+decision is a single stroke: every bubble the finger passes over pops, and
+the rest stay to the end. A bubble on the way down has to go; one in the
+glass holds the water in, and popped, lets it run out and away; the others
+are there to be told apart. Some walls hold seeds, pearls stuck to the glass: water runs
 past them, but a pearl wetted enough opens into a flower across the
 corridor and shuts it, a red one into a rose, a green one into clover, a
 golden one into a daisy. A flower closes a corridor, never the whole flask:
@@ -58,13 +61,17 @@ and they come back as another maze of the same knottiness. The flask wall,
 the neck and the bottom stay where they are.
 
 All the keys sit in the top row: sound, tone and language on the left; on
-the right a page about the game, and a new flask at any time. The page is
+the right Demo, which plays the flask for you from the start whenever asked, a
+page about the game, and a new flask at any time. A flask is never taken
+out of the player's hands: when it runs dry or rests, a card offers a new
+flask or the way through, and the glass still turns. The page is
 inside the game and needs no network: how it plays, every trouble with its
 picture, and how the flasks are made fair, in the language the game speaks. Below them, the best pour of this
 flask, the beads of its knottiness, and the record.
 
-Three tones (sea, amber, moss), each with a day and a night face that
-follows the phone. The music is written as it plays, a new piece of plucked
+Three tones, each a stuff for the maze and a room for it to stand in: glass,
+brass and stone, each with a day and a night face that follows the phone.
+Water, bubbles and flowers look the same in every tone. The music is written as it plays, a new piece of plucked
 drops each time the last one ends, so it never repeats; or silence.
 
 ## Languages
@@ -96,7 +103,7 @@ Numbers go where the English has `{n}` and `{m}`.
 - `Water` is a few hundred round drops. The drops live on the screen and the
   glass turns under them; a moving wall lends a drop its own speed.
 - `Course` decides which flask comes next, and tries it before dealing it.
-- `Hand` knows the way through a flask: it tries every flask, and plays one back to show the way.
+- `Hand` knows the way through a flask: it tries every flask, weighs what each bubble does, and plays a flask from the start to show the way.
 - `Music` plays what the composer writes, and steps aside when the phone needs the sound.
 - `Composer` writes a new piece of music, as a MIDI file, each time it is asked.
 - `Words` holds the English and takes in a language module.

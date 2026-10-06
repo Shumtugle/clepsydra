@@ -37,6 +37,21 @@ over_none
 # Keep the neck up while the water falls, then find a way down to the bottom opening.
 over_none_text	
 
+# Show the way
+show_way	
+
+# One way through
+shown_title	
+
+# Play this flask again, or take a new one.
+shown_text	
+
+# Play it again
+replay	
+
+# Demo
+demo	
+
 # turns left
 turns_left	
 
@@ -52,11 +67,8 @@ note_turns
 # This flask turns for {n} seconds, then sets.
 note_time	
 
-# A bubble of air blocks a corridor. Tap it to pop it, once per flask.
+# Bubbles of air. Some shut the way, one may hold the water in. Pop the ones that must go in one stroke; the rest stay.
 note_bubble	
-
-# Two bubbles and only one pop. Choose well.
-note_bubble_two	
 
 # Seeds like pearls cling to the glass. Wet them, and a flower opens across the way.
 note_seeds	
@@ -82,7 +94,7 @@ note_lava
 # Slime is coming. It makes the water thick and slow.
 note_slime	
 
-# Here is one way through, twice as fast. Tap to skip it.
+# Here is one way through. Tap to stop.
 demo_note	
 
 # music
@@ -91,13 +103,13 @@ music
 # silence
 silence	
 
-# sea
+# glass
 sea	
 
-# amber
+# brass
 amber	
 
-# moss
+# stone
 moss	
 
 # English
@@ -160,7 +172,7 @@ t_time
 # Bubbles
 t_bubble_title	
 
-# A bubble of air across a corridor. A tap pops it, once a flask; with two, only the right one opens a way.
+# Round bubbles of air: across a corridor, in a gap, or in the glass of the flask itself. One stroke a flask: every bubble the finger passes over pops, and the rest stay. Some shut the way; one in the flask's own glass holds the water in, and popped, lets it run out.
 t_bubble	
 
 # Seeds
@@ -214,7 +226,7 @@ t_breath
 # The keys
 help_keys_title	
 
-# Along the top: sound, tone and language on the left; this page and a new flask, at any time, on the right.
+# Along the top: sound, tone and language on the left; on the right, Demo, which plays the flask for you from the start, this page, and a new flask, at any time.
 help_keys	
 
 # No network, no permissions, no advertising. The record stays on the phone.

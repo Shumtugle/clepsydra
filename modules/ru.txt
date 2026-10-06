@@ -36,6 +36,21 @@ over_none	Ничего не прошло
 # Keep the neck up while the water falls, then find a way down to the bottom opening.
 over_none_text	Держи горлышко вверх, пока падает вода, а потом найди путь вниз, к отверстию в дне.
 
+# Show the way
+show_way	Показать путь
+
+# One way through
+shown_title	Вот один путь
+
+# Play this flask again, or take a new one.
+shown_text	Сыграй эту флягу заново или возьми новую.
+
+# Play it again
+replay	Ещё раз
+
+# Demo
+demo	Демо
+
 # turns left
 turns_left	осталось оборотов
 
@@ -51,11 +66,8 @@ note_turns	Повороты ограничены: не больше {n} обор
 # This flask turns for {n} seconds, then sets.
 note_time	Флягу можно крутить {n} с, потом она застынет.
 
-# A bubble of air blocks a corridor. Tap it to pop it, once per flask.
-note_bubble	Пузырь воздуха перекрыл коридор. Коснись его, чтобы лопнуть, — один раз за флягу.
-
-# Two bubbles and only one pop. Choose well.
-note_bubble_two	Два пузыря и только один хлопок. Выбирай с умом.
+# Bubbles of air. Some shut the way, one may hold the water in. Pop the ones that must go in one stroke; the rest stay.
+note_bubble	Пузыри воздуха. Одни перекрывают путь, другой может держать воду внутри. Лопни лишние одним росчерком — остальные останутся.
 
 # Seeds like pearls cling to the glass. Wet them, and a flower opens across the way.
 note_seeds	К стеклу прилипли зёрна, как жемчужины. Намочи их — и поперёк пути распустится цветок.
@@ -81,8 +93,8 @@ note_lava	Идёт лава. Лава, встретив воду, превращ
 # Slime is coming. It makes the water thick and slow.
 note_slime	Идёт тина. От неё вода густеет и становится медленной.
 
-# Here is one way through, twice as fast. Tap to skip it.
-demo_note	Вот один путь насквозь, вдвое быстрее. Коснись, чтобы пропустить.
+# Here is one way through. Tap to stop.
+demo_note	Вот один путь насквозь. Коснись, чтобы остановить.
 
 # music
 music	музыка
@@ -90,14 +102,14 @@ music	музыка
 # silence
 silence	тишина
 
-# sea
-sea	море
+# glass
+sea	стекло
 
-# amber
-amber	янтарь
+# brass
+amber	латунь
 
-# moss
-moss	мох
+# stone
+moss	камень
 
 # English
 english	English
@@ -159,8 +171,8 @@ t_time	Флягу можно крутить только какое-то вре�
 # Bubbles
 t_bubble_title	Пузыри
 
-# A bubble of air across a corridor. A tap pops it, once a flask; with two, only the right one opens a way.
-t_bubble	Пузырь воздуха поперёк коридора. Касание лопает его, один раз за флягу; если пузырей два, путь откроет только правильный.
+# Round bubbles of air: across a corridor, in a gap, or in the glass of the flask itself. One stroke a flask: every bubble the finger passes over pops, and the rest stay. Some shut the way; one in the flask's own glass holds the water in, and popped, lets it run out.
+t_bubble	Круглые пузыри воздуха — поперёк коридора, в щели или в стекле самой фляги. Один росчерк за флягу: лопаются все пузыри, по которым прошёл палец, остальные остаются. Одни перекрывают путь; пузырь в стекле фляги держит воду, а лопнув, выпускает её наружу.
 
 # Seeds
 t_seed_title	Семена
@@ -213,8 +225,8 @@ t_breath	Когда дождь кончился, обычная фляга ин�
 # The keys
 help_keys_title	Кнопки
 
-# Along the top: sound, tone and language on the left; this page and a new flask, at any time, on the right.
-help_keys	Наверху: слева звук, тон и язык; справа эта страница и новая фляга, в любой момент.
+# Along the top: sound, tone and language on the left; on the right, Demo, which plays the flask for you from the start, this page, and a new flask, at any time.
+help_keys	Сверху слева — звук, тон и язык; справа — Демо, где фляга играется за тебя с начала, эта страница и новая фляга, в любой момент.
 
 # No network, no permissions, no advertising. The record stays on the phone.
 help_quiet	Без интернета, без разрешений, без рекламы. Рекорд остаётся на телефоне.

@@ -99,16 +99,20 @@ final class Maze {
     }
 
     /**
-     * Something lying across a corridor. A bubble of air blocks it until it is
-     * popped. A seed, a pearl stuck to the glass, lets water by, but once wet enough it sprouts, and the flower opens
-     * from the wall it sits on across to the other wall and shuts the way.
-     * The radii run from the base to the far side, in flask radii.
+     * Something lying across a corridor, or in a gap. A bubble of air blocks
+     * the corridor it fills, or corks the gap it sits in, until it is popped.
+     * A seed, a pearl stuck to the glass, lets water by, but once wet enough
+     * it sprouts, and the flower opens from the wall it sits on across to the
+     * other wall and shuts the way. The radii run from the base to the far
+     * side, in flask radii; a cork sits on its ring, both radii the same.
      */
     static final class Obstacle {
         final int kind, band;
+        /** The ring a cork sits in, or -1 for anything across a corridor. */
+        final int ring;
+        /** What a bubble is there for: to be popped, to be kept, or for nothing. */
+        final int role;
         final float a, cs, sn, r0, r1;
-        /** The bubbles of a plug, for drawing: place along, place across, size. */
-        final float[] grainU, grainV, grainS;
         /** Which flower a seed holds: a red pearl a rose, a green one clover, a golden one a daisy. */
         final int variant;
         boolean active = true;
@@ -125,20 +129,18 @@ final class Maze {
         Obstacle(Obstacle o, boolean mirror) {
             kind = o.kind;
             band = o.band;
+            ring = o.ring;
+            role = o.role;
             a = mirror ? norm(PI - o.a) : o.a;
             cs = (float) Math.cos(a);
             sn = (float) Math.sin(a);
             r0 = o.r0;
             r1 = o.r1;
             variant = o.variant;
-            grainU = o.grainU.clone();
-            grainS = o.grainS.clone();
-            grainV = o.grainV.clone();
             size = o.size;
             s0 = o.s0;
             s = o.s0;
             if (!mirror) return;
-            for (int i = 0; i < grainV.length; i++) grainV[i] = -grainV[i];
             active = o.active;
             wet = o.wet;
             grow = o.grow;
@@ -148,26 +150,58 @@ final class Maze {
             up = o.up;
         }
 
-        Obstacle(int kind, int band, float a, float r0, float r1, Random rnd) {
+        Obstacle(int kind, int band, float a, float r0, float r1, int role, Random rnd) {
             this.kind = kind;
             this.band = band;
+            this.ring = -1;
+            this.role = role;
             this.a = norm(a);
             this.cs = (float) Math.cos(a);
             this.sn = (float) Math.sin(a);
             this.r0 = r0;
             this.r1 = r1;
             variant = kind == SEED ? rnd.nextInt(3) : 0;
-            int grains = kind == BUBBLE ? 6 : 0;
-            grainU = new float[grains];
-            grainV = new float[grains];
-            grainS = new float[grains];
-            for (int i = 0; i < grains; i++) {
-                // a few round bubbles of different sizes, crowded across the corridor
-                grainU[i] = 0.12f + 0.76f * i / (grains - 1) + sym(rnd, 0.05f);
-                grainV[i] = sym(rnd, 0.6f);
-                grainS[i] = range(rnd, 1.0f, 1.4f);
-            }
+            // a bubble across a corridor is one round bubble, wall to wall
+            if (kind == BUBBLE) size = Math.abs(r1 - r0) / 2;
         }
+
+        /** A cork: one bubble sitting in the gap at angle a of ring k, a little wider than the gap. */
+        Obstacle(int k, float a, float radius, float halfGap, int role) {
+            kind = BUBBLE;
+            band = k;
+            ring = k;
+            this.role = role;
+            this.a = norm(a);
+            cs = (float) Math.cos(a);
+            sn = (float) Math.sin(a);
+            r0 = r1 = radius;
+            variant = 0;
+            size = halfGap * radius + 0.02f;
+        }
+
+        /** Where the middle of a bubble is, in flask radii from the centre. */
+        float mid() {
+            return (r0 + r1) / 2;
+        }
+    }
+
+    /** What a bubble is there for. */
+    static final int LOCK = 0, GUARD = 1, DECOY = 2;
+    /** The ring a cork in the flask's own glass sits in; how wide a vent there is, half of it. */
+    static final int WALL = 64;
+    static final float VENT_H = 0.09f;
+
+    /** Holes cut in the flask's own glass, each corked by a guard. */
+    float[] vents = new float[0];
+
+    /** Cuts the vents into the flask's own glass, beside the neck and the bottom. */
+    void vent(float[] v) {
+        vents = v;
+        float[] c = new float[2 + v.length], h = new float[2 + v.length];
+        c[0] = NECK; h[0] = NECK_H;
+        c[1] = BOTTOM; h[1] = BOTTOM_H;
+        for (int i = 0; i < v.length; i++) { c[2 + i] = v[i]; h[2 + i] = VENT_H; }
+        rings[0] = new Ring(1f, c, h);
     }
 
     final int tier, style, rule;
@@ -180,8 +214,8 @@ final class Maze {
     final float need;
     /** How to do it: the angles the flask stands at, one after another. */
     final float[] plan;
-    /** The bubble to pop for that, or -1 when none has to go. */
-    final int pop;
+    /** The bubbles to pop for that; none may have to go. */
+    final boolean[] pops;
     /** The flask turns by itself; the flask flips over like a coin now and then; what falls. */
     boolean wild, coin;
     /** Once the rain is over, the flask breathes now and then and its maze changes. */
@@ -194,14 +228,14 @@ final class Maze {
     final float[][] gaps, spokes;
 
     private Maze(int tier, int style, float[] radii, float[] half, float[][] gaps, float[][] spokes,
-                 Obstacle[] obstacles, int rule, float[] solved, int pop) {
+                 Obstacle[] obstacles, int rule, float[] solved, boolean[] pops) {
         this.tier = tier;
         this.style = style;
         this.rule = rule;
         this.obstacles = obstacles;
         this.need = solved[0];
         this.plan = Arrays.copyOfRange(solved, 1, solved.length);
-        this.pop = pop;
+        this.pops = pops;
         this.radii = radii;
         this.half = half;
         this.gaps = gaps;
@@ -255,7 +289,10 @@ final class Maze {
         float[] solved = new float[plan.length + 1];
         solved[0] = need;
         for (int i = 0; i < plan.length; i++) solved[i + 1] = -plan[i];
-        Maze m = new Maze(tier, style, radii, half, g, s, o, rule, solved, pop);
+        Maze m = new Maze(tier, style, radii, half, g, s, o, rule, solved, pops.clone());
+        float[] v = new float[vents.length];
+        for (int i = 0; i < v.length; i++) v[i] = norm(PI - vents[i]);
+        if (v.length > 0) m.vent(v);
         m.wild = wild;
         m.breathing = breathing;
         m.falls = falls.clone();
@@ -287,7 +324,8 @@ final class Maze {
         float[] solved = new float[plan.length + 1];
         solved[0] = need;
         System.arraycopy(plan, 0, solved, 1, plan.length);
-        Maze m = new Maze(tier, style, radii, half, gaps, spokes, o, rule, solved, pop);
+        Maze m = new Maze(tier, style, radii, half, gaps, spokes, o, rule, solved, pops.clone());
+        if (vents.length > 0) m.vent(vents.clone());
         m.wild = wild;
         m.breathing = breathing;
         m.falls = falls.clone();
@@ -315,9 +353,9 @@ final class Maze {
     }
 
     /**
-     * A new maze of the given tier (1 to 5) and style, with so many plugs of
-     * bubbles and so many seeds, held back by the given rule. Always passable:
-     * with bubbles, after one of them is popped.
+     * A new maze of the given tier (1 to 5) and style, with so many bubbles
+     * and so many seeds, held back by the given rule. Always passable: with
+     * bubbles, after the right ones are popped and the rest kept.
      */
     static Maze make(int tier, int style, int bubbles, int seeds, int rule, Random rnd) {
         return make(tier, style, bubbles, seeds, 0, rule, rnd);
@@ -413,7 +451,7 @@ final class Maze {
                 float[] plan = solve(g, s, radii, half);
                 if (plan != null) {
                     bestMiss = miss;
-                    best = new Maze(tier, style, radii, half, g, s, new Obstacle[0], rule, plan, -1);
+                    best = new Maze(tier, style, radii, half, g, s, new Obstacle[0], rule, plan, new boolean[0]);
                 }
             }
         }
@@ -423,17 +461,24 @@ final class Maze {
         float[] h = {0.30f / 1.36f, 0.30f / 0.76f};
         float[] plan = solve(g, s, RADII[0], h);
         if (plan == null) plan = new float[] {0f, 0f};
-        return new Maze(1, SCATTER, RADII[0], h, g, s, new Obstacle[0], FREE, plan, -1);
+        return new Maze(1, SCATTER, RADII[0], h, g, s, new Obstacle[0], FREE, plan, new boolean[0]);
     }
 
-    /** Lays bubbles and seeds on a finished maze; null if they will not fit or would shut it. */
+    /**
+     * Lays bubbles and seeds on a finished maze; null if they will not fit or
+     * would shut it. Bubbles come in three kinds, alike to the eye. A lock
+     * shuts the way down, in a corridor on it or as a cork in one of its
+     * gaps, and has to be popped. A decoy stands somewhere harmless. A guard
+     * is laid later, once the water has been watched (see guarded). The
+     * flask's one decision is which of them to pop.
+     */
     private static Maze dress(int tier, int style, float[] radii, float[] half, float[][] g, float[][] s,
                               int bubbles, int seeds, int rule, Random rnd, ArrayList<float[]> sites, float width) {
         int n = radii.length;
         ArrayList<Obstacle> obs = new ArrayList<Obstacle>();
         for (float[] site : sites) {
             int b = (int) site[0];
-            Obstacle o = new Obstacle(FLOAT, b, site[1], radii[b], radii[b - 1], rnd);
+            Obstacle o = new Obstacle(FLOAT, b, site[1], radii[b], radii[b - 1], DECOY, rnd);
             // a little wider than the gaps it shuts
             o.size = width / 2 + 0.025f;
             // it starts sunk: at whichever end of its rail lies lower with the flask upright
@@ -443,56 +488,201 @@ final class Maze {
         if (bubbles == 0 && seeds == 0 && obs.isEmpty()) {
             float[] plan = solve(g, s, radii, half);
             if (plan == null) return null;
-            return new Maze(tier, style, radii, half, g, s, new Obstacle[0], rule, plan, -1);
+            return new Maze(tier, style, radii, half, g, s, new Obstacle[0], rule, plan, new boolean[0]);
         }
+        boolean[] none = new boolean[obs.size()];
         Bands bands = new Bands(s, n);
-        ArrayList<float[]> legs = route(g, bands, n);
+        ArrayList<float[]> legs = route(open(g, obs, none, n), bands, n);
         if (legs == null) return null;
-        for (int i = 0; i < bubbles; i++) {
-            // the first bubble sits on the way down; a second may sit anywhere, even on it
-            Obstacle o = i == 0 ? onLeg(BUBBLE, legs, bands, g, half, radii, obs, rnd)
-                    : anywhere(BUBBLE, bands, g, half, radii, obs, rnd);
+        int locks = bubbles > 0 ? 1 : 0;
+        for (int i = 0; i < locks; i++) {
+            // a lock is a cork in a gap on the way about as often as a bubble across it
+            Obstacle o = rnd.nextBoolean() ? cork(legs, half, radii, obs, n, rnd) : null;
+            if (o == null) o = onLeg(BUBBLE, LOCK, legs, bands, g, half, radii, obs, rnd);
+            if (o == null) return null;
+            obs.add(o);
+        }
+        for (int i = locks; i < bubbles; i++) {
+            Obstacle o = anywhere(BUBBLE, DECOY, bands, g, half, radii, obs, rnd);
             if (o == null) return null;
             obs.add(o);
         }
         for (int i = 0; i < seeds; i++) {
-            Obstacle o = onLeg(SEED, legs, bands, g, half, radii, obs, rnd);
-            if (o == null) o = anywhere(SEED, bands, g, half, radii, obs, rnd);
+            Obstacle o = onLeg(SEED, DECOY, legs, bands, g, half, radii, obs, rnd);
+            if (o == null) o = anywhere(SEED, DECOY, bands, g, half, radii, obs, rnd);
             if (o == null) return null;
             obs.add(o);
         }
-        // one pop a flask: some single bubble, or none, must open the way, and it
-        // must stay open with every flower grown, so a seed shuts one corridor, not the flask
+        // the hand pops no bubble or one, never a guard; the way must stay open with
+        // every flower grown, so a seed shuts one corridor, not the flask
         float[] best = null;
-        int pop = -1;
-        // most of the time a bubble is not there for nothing: the way is shut until one is popped
-        boolean mustPop = bubbles > 0 && rnd.nextFloat() < 0.7f;
+        boolean[] pick = null;
+        // most of the time a lock is not there for nothing: the way is shut until it is popped
+        boolean mustPop = locks > 0 && rnd.nextFloat() < 0.7f;
         for (int skip = -1; skip < obs.size(); skip++) {
-            if (skip >= 0 && obs.get(skip).kind != BUBBLE) continue;
-            float[] plan = solve(g, withWalls(s, obs, skip, n), radii, half);
+            if (skip >= 0 && (obs.get(skip).kind != BUBBLE || obs.get(skip).role == GUARD)) continue;
+            boolean[] popped = new boolean[obs.size()];
+            if (skip >= 0) popped[skip] = true;
+            float[] plan = solve(open(g, obs, popped, n), withWalls(s, obs, popped, n), radii, half);
             if (skip < 0 && mustPop && plan != null) return null;
-            if (plan != null && (best == null || plan[0] < best[0])) { best = plan; pop = skip; }
+            if (plan != null && (best == null || plan[0] < best[0])) { best = plan; pick = popped; }
         }
         if (best == null) return null;
-        return new Maze(tier, style, radii, half, g, s, obs.toArray(new Obstacle[0]), rule, best, pop);
+        return new Maze(tier, style, radii, half, g, s, obs.toArray(new Obstacle[0]), rule, best, pick);
     }
 
-    /** The walls with every obstacle standing as one more wall, but for the one popped. */
-    private static float[][] withWalls(float[][] s, ArrayList<Obstacle> obs, int skip, int n) {
+    /**
+     * The same flask with one more bubble, a guard: a vent cut in the flask's
+     * own glass, corked by a bubble. The flask is played through out of sight
+     * and the places where water rests against the glass are counted; the
+     * vent goes where it rests most, away from the neck, the bottom and the
+     * walls. Kept, the bubble holds the water in; popped, the water runs out
+     * of the vent and is lost. The guard stays only if losing it costs the
+     * pour a good part of its water. Null when no vent does that.
+     */
+    static Maze guarded(Maze m, Random rnd) {
+        int bins = 72;
+        float[] heat = heat(m, bins, rnd);
+        int n = m.radii.length;
+        for (int q = 0; q < 5; q++) {
+            int bj = -1;
+            float hot = 0;
+            for (int j = 0; j < bins; j++) if (heat[j] > hot) { hot = heat[j]; bj = j; }
+            if (bj < 0 || hot < 30) return null;
+            // the spot and its neighbours are spent whether the vent fits or not
+            for (int j = bj - 2; j <= bj + 2; j++) heat[(j + bins) % bins] = 0;
+            float a = (bj + 0.5f) * TAU / bins;
+            if (adist(a, NECK) < NECK_H + VENT_H + 0.35f || adist(a, BOTTOM) < BOTTOM_H + VENT_H + 0.35f) continue;
+            boolean clear = true;
+            for (float sp : m.spokes[0]) if (adist(a, sp) < VENT_H + 0.12f) clear = false;
+            for (float v : m.vents) if (adist(a, v) < 2 * VENT_H + 0.3f) clear = false;
+            for (Obstacle o : m.obstacles) {
+                boolean outer = o.ring == WALL || (o.ring < 0 && o.band == 0) || o.ring == 0;
+                if (outer && adist(a, o.a) < VENT_H + 0.35f) clear = false;
+            }
+            if (!clear) continue;
+            Obstacle[] obs = new Obstacle[m.obstacles.length + 1];
+            for (int i = 0; i < m.obstacles.length; i++) obs[i] = new Obstacle(m.obstacles[i], false);
+            obs[obs.length - 1] = new Obstacle(WALL, a, 1f, VENT_H, GUARD);
+            float[] solved = new float[m.plan.length + 1];
+            solved[0] = m.need;
+            System.arraycopy(m.plan, 0, solved, 1, m.plan.length);
+            Maze out = new Maze(m.tier, m.style, m.radii, m.half, m.gaps, m.spokes, obs, m.rule, solved,
+                    Arrays.copyOf(m.pops, obs.length));
+            out.wild = m.wild;
+            out.coin = m.coin;
+            out.breathing = m.breathing;
+            out.falls = m.falls.clone();
+            out.weather = m.weather;
+            float[] v = Arrays.copyOf(m.vents, m.vents.length + 1);
+            v[v.length - 1] = a;
+            out.vent(v);
+            int[] kept = Hand.play(out, out.pops, new Random(rnd.nextLong()));
+            boolean[] all = out.pops.clone();
+            all[all.length - 1] = true;
+            int[] lost = Hand.play(out, all, new Random(rnd.nextLong()));
+            if (kept[1] >= 10 && (lost[0] <= kept[0] * 0.75f || lost[1] <= kept[1] * 0.7f)) return out;
+        }
+        return null;
+    }
+
+    /**
+     * Where the water rests against the flask's own glass while the hand
+     * plays the flask: in bins of angle, counted only where the glass is
+     * underneath the water, so that a hole there would let it out.
+     */
+    private static float[] heat(Maze made, int bins, Random rnd) {
+        float[] heat = new float[bins];
+        Maze m = made.fresh();
+        Water w = new Water();
+        w.size(1080, 2400, 540, 1272, 453);
+        w.reset(m);
+        Hand hand = new Hand(m);
+        float dt = 1f / 240, lastSpawn = -99f;
+        int spawned = 0;
+        for (int step = 0; step < 240 * 90; step++) {
+            w.t += dt;
+            if (spawned < Water.VOLUMES && w.t >= FIRST_SPAWN + spawned * SPAWN_EVERY) {
+                w.spawn(w.cx + (rnd.nextFloat() * 0.2f - 0.1f) * w.r, m.falls[spawned]);
+                spawned++;
+                lastSpawn = w.t;
+            }
+            boolean rained = spawned == Water.VOLUMES && w.t > lastSpawn + 3f;
+            if (hand.pop(rained)) Hand.popAll(w.maze, m.pops);
+            float rot = hand.goal(w, rained, dt) - w.ang;
+            rot = rot < -Hand.TURN ? -Hand.TURN : rot > Hand.TURN ? Hand.TURN : rot;
+            w.step(dt, rot);
+            if (hand.walked() && w.t - hand.end() > 6f) break;
+            if (step % 8 != 0) continue;
+            float ca = (float) Math.cos(w.ang), sa = (float) Math.sin(w.ang);
+            for (int i = 0; i < w.n; i++) {
+                if (w.state[i] != Water.INSIDE || w.kind[i] != Water.WATER) continue;
+                float dx = w.x[i] - w.cx, dy = w.y[i] - w.cy;
+                float lx = ca * dx + sa * dy, ly = -sa * dx + ca * dy;
+                float rho = (float) Math.sqrt(lx * lx + ly * ly) / w.r;
+                if (rho < 0.9f || rho > 1f) continue;
+                float th = norm((float) Math.atan2(ly, lx));
+                // the glass is underneath where the spot is low on the screen
+                if (Math.sin(th + w.ang) < 0.3f) continue;
+                heat[(int) (th / TAU * bins) % bins] += 1;
+            }
+        }
+        return heat;
+    }
+
+    /** A cork for one of the gaps the way down passes through, or null. */
+    private static Obstacle cork(ArrayList<float[]> legs, float[] half, float[] radii, ArrayList<Obstacle> obs,
+                                 int n, Random rnd) {
+        if (legs.size() < 2) return null;
+        for (int q = 0; q < 8; q++) {
+            int i = rnd.nextInt(legs.size() - 1);
+            int b0 = (int) legs.get(i)[0], b1 = (int) legs.get(i + 1)[0];
+            int k = Math.min(b0, b1);
+            if (k < 0 || k >= n || Math.abs(b0 - b1) != 1) continue;
+            float a = legs.get(i)[2];
+            boolean taken = false;
+            for (Obstacle o : obs) if (o.ring == k && adist(o.a, a) < 0.05f) taken = true;
+            if (taken) continue;
+            return new Obstacle(k, a, radii[k], half[k], LOCK);
+        }
+        return null;
+    }
+
+    /** The gaps as water finds them: a gap with a cork still in it is shut. */
+    private static float[][] open(float[][] g, ArrayList<Obstacle> obs, boolean[] popped, int n) {
         float[][] out = new float[n][];
-        for (int b = 0; b < n; b++) {
-            int extra = 0;
-            for (int i = 0; i < obs.size(); i++) if (wall(obs.get(i), i, skip, b)) extra++;
-            out[b] = Arrays.copyOf(s[b], s[b].length + extra);
-            int at = s[b].length;
-            for (int i = 0; i < obs.size(); i++) if (wall(obs.get(i), i, skip, b)) out[b][at++] = obs.get(i).a;
+        for (int k = 0; k < n; k++) {
+            float[] keep = new float[g[k].length];
+            int m = 0;
+            for (float c : g[k]) {
+                boolean shut = false;
+                for (int i = 0; i < obs.size(); i++) {
+                    Obstacle o = obs.get(i);
+                    if (o.ring == k && !popped[i] && adist(o.a, c) < 0.05f) shut = true;
+                }
+                if (!shut) keep[m++] = c;
+            }
+            out[k] = Arrays.copyOf(keep, m);
         }
         return out;
     }
 
-    /** Bubbles and seeds stand across a corridor like walls; a float moves and does not. */
-    private static boolean wall(Obstacle o, int i, int skip, int b) {
-        return i != skip && o.band == b && o.kind != FLOAT;
+    /** The walls with every obstacle across a corridor standing as one more wall, but for the popped. */
+    private static float[][] withWalls(float[][] s, ArrayList<Obstacle> obs, boolean[] popped, int n) {
+        float[][] out = new float[n][];
+        for (int b = 0; b < n; b++) {
+            int extra = 0;
+            for (int i = 0; i < obs.size(); i++) if (wall(obs.get(i), popped[i], b)) extra++;
+            out[b] = Arrays.copyOf(s[b], s[b].length + extra);
+            int at = s[b].length;
+            for (int i = 0; i < obs.size(); i++) if (wall(obs.get(i), popped[i], b)) out[b][at++] = obs.get(i).a;
+        }
+        return out;
+    }
+
+    /** Bubbles and seeds across a corridor stand like walls; a float moves and does not, a cork shuts a gap. */
+    private static boolean wall(Obstacle o, boolean popped, int b) {
+        return !popped && o.band == b && o.kind != FLOAT && o.ring < 0;
     }
 
     /** A rail for a float in some band with a ring on each side, and the two gaps it serves. */
@@ -519,13 +709,13 @@ final class Maze {
         return false;
     }
 
-    private static Obstacle lay(int kind, int b, float a, float[] radii, Random rnd) {
+    private static Obstacle lay(int kind, int role, int b, float a, float[] radii, Random rnd) {
         float out = b == 0 ? 1f : radii[b - 1], in = radii[b];
-        if (kind == SEED && rnd.nextBoolean()) return new Obstacle(kind, b, a, out, in, rnd);
-        return new Obstacle(kind, b, a, in, out, rnd);
+        if (kind == SEED && rnd.nextBoolean()) return new Obstacle(kind, b, a, out, in, role, rnd);
+        return new Obstacle(kind, b, a, in, out, role, rnd);
     }
 
-    private static Obstacle onLeg(int kind, ArrayList<float[]> legs, Bands bands, float[][] g, float[] half,
+    private static Obstacle onLeg(int kind, int role, ArrayList<float[]> legs, Bands bands, float[][] g, float[] half,
                                   float[] radii, ArrayList<Obstacle> obs, Random rnd) {
         int n = radii.length;
         for (int q = 0; q < legs.size() * 3; q++) {
@@ -535,18 +725,18 @@ final class Maze {
             float arc = bands.arc(b, leg[1], leg[2]);
             if (arc < 0.6f) continue;
             float a = bands.mid(b, leg[1], leg[2]) + sym(rnd, arc * 0.15f);
-            if (roomFor(b, a, bands, g, half, obs)) return lay(kind, b, a, radii, rnd);
+            if (roomFor(b, a, bands, g, half, obs)) return lay(kind, role, b, a, radii, rnd);
         }
         return null;
     }
 
-    private static Obstacle anywhere(int kind, Bands bands, float[][] g, float[] half, float[] radii,
+    private static Obstacle anywhere(int kind, int role, Bands bands, float[][] g, float[] half, float[] radii,
                                      ArrayList<Obstacle> obs, Random rnd) {
         int n = radii.length;
         for (int q = 0; q < 80; q++) {
             int b = rnd.nextInt(n);
             float a = rnd.nextFloat() * TAU;
-            if (roomFor(b, a, bands, g, half, obs)) return lay(kind, b, a, radii, rnd);
+            if (roomFor(b, a, bands, g, half, obs)) return lay(kind, role, b, a, radii, rnd);
         }
         return null;
     }
@@ -559,7 +749,10 @@ final class Maze {
         }
         for (float c : g[b]) if (adist(a, c) < half[b] + 0.2f) return false;
         for (float sp : bands.sorted[b]) if (adist(a, sp) < 0.35f) return false;
-        for (Obstacle o : obs) if (o.band == b && adist(a, o.a) < 0.5f) return false;
+        for (Obstacle o : obs) {
+            boolean near = o.ring < 0 ? o.band == b : o.ring == b || o.ring == b - 1;
+            if (near && adist(a, o.a) < 0.5f) return false;
+        }
         return true;
     }
 

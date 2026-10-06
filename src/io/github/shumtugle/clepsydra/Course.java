@@ -46,7 +46,8 @@ final class Course {
         int rule = rules[ruleAt++];
 
         int bubbles = 0, seeds = 0, floats = 0;
-        if (tier >= 2 && rnd.nextFloat() < 0.35f) bubbles = tier >= 3 && rnd.nextFloat() < 0.4f ? 2 : 1;
+        // a lock and a decoy or two; a guard may join them once the flask has been tried
+        if (tier >= 2 && rnd.nextFloat() < 0.35f) bubbles = tier >= 3 && rnd.nextFloat() < 0.5f ? 3 : 2;
         if (tier >= 2 && rnd.nextFloat() < 0.35f) seeds = 1 + (rnd.nextFloat() < 0.35f ? 1 : 0);
         if (tier >= 2 && rnd.nextFloat() < 0.3f) floats = tier >= 4 && rnd.nextFloat() < 0.4f ? 2 : 1;
         int troubles = (rule != Maze.FREE ? 1 : 0) + (bubbles > 0 ? 1 : 0) + (seeds > 0 ? 1 : 0) + (floats > 0 ? 1 : 0);
@@ -110,7 +111,14 @@ final class Course {
             m.breathing = breathing;
             m.falls = falls(weather);
             last = m;
-            if (Hand.tries(m, rnd)) return m;
+            if (!Hand.tries(m, rnd)) continue;
+            if (bubbles > 0) {
+                // a flask of bubbles is a choice only when one of them is worth keeping
+                Maze g = Maze.guarded(m, rnd);
+                if (g != null) return g;
+                if (attempt < 4) continue;
+            }
+            return m;
         }
         return last;
     }
