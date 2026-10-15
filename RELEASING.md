@@ -11,7 +11,8 @@ browser; nothing here needs more than the repository's web pages.
    game and come back.
 2. Raise the version in `AndroidManifest.xml`: `versionCode` must grow with
    every release (a phone refuses an update whose code is not higher),
-   `versionName` is what people read.
+   `versionName` is what people read. The same name goes into the footer
+   of `docs/index.html`.
 3. If any English words changed, write the template out again and bring the
    modules up to it: every module must have the same keys as
    `modules/template.txt`, in the same order. Copy the finished modules into
@@ -44,5 +45,6 @@ Keep the key and its password out of the repository.
 The page lives in `docs/index.html`. To serve it: **Settings → Pages →
 Build and deployment → Deploy from a branch**, branch `main`, folder
 `/docs`, **Save**. It appears at `https://<owner>.github.io/<repository>/`
-a minute or two later. The page links to the latest release, so it needs no
-change for a new version unless the game itself changed.
+a minute or two later. The page links to the latest release, so the button
+needs no change for a new version. The footer names the version and does:
+raise it with `versionName`.
